@@ -1,0 +1,150 @@
+# #Using OpenAI
+# # from openai import OpenAI
+# # from dotenv import load_dotenv
+# # import os
+
+# # load_dotenv()
+
+# # api_key = os.getenv("***REMOVED***")
+
+
+# # client = OpenAI(api_key=api_key)
+
+# # response = client.responses.create(
+# #     model="gpt-4.1-mini",
+# #     input="Hello!"
+# #     )
+# # print(response.output_text)
+
+
+    
+
+# # #Using Claude 
+# # from anthropic import Anthropic
+
+# # # Initialize client with your Claude API key
+# # client = Anthropic(api_key="***REMOVED***")
+
+# # try:
+# #     response = client.messages.create(
+# #         model="***REMOVED***",  # You can also use ***REMOVED*** or ***REMOVED***
+# #         max_tokens=200,
+# #         messages=[
+# #             {"role": "user", "content": "Hello!"}
+# #         ]
+# #     )
+# #     print(response.content[0].text)
+
+# # except Exception as e:
+# #     print("Error:", e)
+
+# #***REMOVED***"AI TRAVEL AGENT"***REMOVED***-----
+
+# # from dotenv import load_dotenv
+# # import os
+# # from openai import OpenAI
+
+# # load_dotenv()
+
+# # api_key = os.getenv("***REMOVED***")
+
+# # client = OpenAI(api_key=api_key)
+
+# # print("===================================")
+# # print("     AI TRAVEL AGENT")
+# # print("===================================")
+
+
+# from dotenv import load_dotenv
+# import os
+# from openai import OpenAI
+# from google import genai
+# # Load API Key
+# load_dotenv()
+
+# # api_key = os.getenv("***REMOVED***")
+
+# # client = OpenAI(api_key=api_key)
+
+# client = genai.Client(
+#     api_key=os.getenv("***REMOVED***")
+# )
+
+# print("=" * 40)
+# print("       AI TRAVEL AGENT")
+# print("=" * 40)
+
+# print("\nAI : Welcome to AI Travel Agent!\n")
+
+# # Collect user information
+# name = input("AI : What is your name? : ")
+
+# destination = input("AI : Which place do you want to visit? : ")
+
+# days = input("AI : How many days will you travel? : ")
+
+# budget = input("AI : What is your budget (₹)? : ")
+
+# travelers = input("AI : How many travelers? : ")
+
+# transport = input("AI : Preferred transport (Flight/Train/Bus/Car)? : ")
+
+# # print("\nInformation Collected Successfully!\n")
+
+# # print("----- Trip Details -----")
+
+# # print("Name       :", name)
+# # print("Destination:", destination)
+# # print("Days       :", days)
+# # print("Budget     : ₹", budget)
+# # print("Travelers  :", travelers)
+# # print("Transport  :", transport)
+
+
+# #***REMOVED*** will give prompt to Ai in this formate variable is not understand by Chpt GPT then why 
+
+
+# prompt = f"""
+# You are an expert travel planner.
+
+# Create a travel itinerary using these details.
+
+# Name: {name}
+# Destination: {destination}
+# Days: {days}
+# Budget: ₹{budget}
+# Travelers: {travelers}
+# Transport: {transport}
+
+# Include:
+# - Trip summary
+# - Day-wise itinerary
+# - Estimated expenses
+# - Hotel suggestions
+# - Food recommendations
+# - Travel tips
+
+# Format the response professionally.
+# """
+
+
+
+
+
+# # response = client.responses.create(
+# #     model="gpt-4.1-mini",
+# #     input=prompt
+# # )
+
+# response = client.models.***REMOVED***(
+#         model="gemini-3.***REMOVED***",   # Use the model that works for your account
+#         contents=prompt
+#     )
+
+# print("\n" + "=" * 50)
+# print("      YOUR AI TRAVEL PLAN")
+# print("=" * 50)
+
+# # print(response.output_text)
+
+# print("\nGemini:", response.text)
