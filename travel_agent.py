@@ -5,6 +5,7 @@ from prompts import extraction_prompt, create_travel_prompt
 from memory import memory
 from conversation import ask_missing_information
 from tools.weather import get_weather
+from tools.tool_router import select_tools
 
 
 
@@ -67,3 +68,16 @@ def run_travel_agent():
 
 
 
+from tools.tool_router import select_tools
+
+while True:
+
+    message = input("You : ")
+
+    if message.lower() == "exit":
+        break
+
+    tools = select_tools(message)
+
+    print("\nSelected Tools")
+    print(tools)
