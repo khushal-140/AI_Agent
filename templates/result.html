@@ -1,0 +1,194 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Your Travel Plan — AI Travel Agent</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+</head>
+<body class="result-body">
+
+  <header class="result-hero">
+    <a class="back-link" href="/">← Back to chat</a>
+    <p class="hero-eyebrow">Your AI-crafted travel plan</p>
+    <h1>{{ memory.get('destination', 'Your Trip') }}</h1>
+    <div class="hero-chips">
+      <span class="chip">📅 {{ memory.get('days', '—') }} days</span>
+      <span class="chip">👥 {{ memory.get('travelers', '—') }} travelers</span>
+      <span class="chip">💰 ₹{{ "{:,.0f}".format(memory.get('budget') or 0) }}</span>
+      <span class="chip">🚀 {{ memory.get('transport', '—') }}</span>
+    </div>
+  </header>
+
+  <main class="result-layout">
+
+    {% if itinerary.get('raw') %}
+      <section class="card result-card">
+        <span class="badge badge-ai">✨ AI generated</span>
+        <h2>Your Travel Plan</h2>
+        <pre class="raw-plan">{{ itinerary.get('raw_text', '') }}</pre>
+      </section>
+    {% else %}
+
+    <section class="card result-card">
+      <span class="badge badge-ai">✨ AI generated</span>
+      <h2>Trip Summary</h2>
+      <p class="summary-text">{{ itinerary.get('trip_summary', '') }}</p>
+    </section>
+
+    {% set weather = tool_results.get('weather', {}) %}
+    {% if weather.get('status') == 'success' %}
+    <section class="card result-card">
+      <span class="badge badge-live">🛰️ Live · {{ weather.get('source', 'Weather API') }}</span>
+      <h2>🌤️ Weather in {{ weather.get('destination', '') }}</h2>
+      <div class="weather-now">
+        <div class="weather-temp">{{ weather.get('temperature', '—') }}°C</div>
+        <div class="weather-meta">
+          <div class="weather-cond">{{ weather.get('condition', '') }}</div>
+          <div class="muted">Feels like {{ weather.get('feels_like', '—') }}°C ·
+               Humidity {{ weather.get('humidity', '—') }}% ·
+               Wind {{ weather.get('wind_kph', '—') }} km/h</div>
+        </div>
+      </div>
+      <div class="forecast-row">
+        {% for day in weather.get('forecast', []) %}
+        <div class="forecast-day">
+          <div class="f-date">{{ day.get('date', '') }}</div>
+          <div class="f-cond">{{ day.get('condition', '') }}</div>
+          <div class="f-temp">↑ {{ day.get('max', '—') }}° · ↓ {{ day.get('min', '—') }}°</div>
+          <div class="muted">🌧️ {{ day.get('rain_chance', '—') }}%</div>
+        </div>
+        {% endfor %}
+      </div>
+    </section>
+    {% endif %}
+
+    {% set budget_tool = tool_results.get('budget', {}) %}
+    {% if budget_tool.get('status') == 'success' %}
+    <section class="card result-card">
+      <span class="badge badge-calc">🧮 Calculated by Budget Tool</span>
+      <h2>💰 Budget Plan</h2>
+      <p class="budget-lead">
+        ₹{{ "{:,.0f}".format(budget_tool.get('total_budget', 0)) }} ÷
+        {{ budget_tool.get('travelers', 1) }} travelers =
+        <strong>₹{{ "{:,.0f}".format(budget_tool.get('budget_per_person', 0)) }} per person</strong>
+      </p>
+      {% set bd = itinerary.get('budget_breakdown', {}) %}
+      {% if bd %}
+      <div class="budget-bars">
+        {% for category in ['hotel', 'food', 'transportation', 'activities', 'miscellaneous'] %}
+          {% if bd.get(category) %}
+          <div class="budget-row">
+            <span class="b-label">{{ category | capitalize }}</span>
+            <div class="b-bar">
+              <div class="b-fill b-{{ category }}"
+                   style="width: {{ (bd.get(category, 0) / bd.get('total', 1) * 100) | round(1) }}%"></div>
+            </div>
+            <span class="b-amt">₹{{ "{:,.0f}".format(bd.get(category, 0)) }}</span>
+          </div>
+          {% endif %}
+        {% endfor %}
+        <div class="budget-total">
+          Estimated total: <strong>₹{{ "{:,.0f}".format(bd.get('total', 0)) }}</strong>
+          <span class="badge badge-est">Estimate</span>
+        </div>
+      </div>
+      {% endif %}
+    </section>
+    {% endif %}
+
+    <section class="card result-card">
+      <span class="badge badge-ai">✨ AI generated</span>
+      <h2>🗓️ Day-by-Day Plan</h2>
+      {% for d in itinerary.get('days', []) %}
+      <article class="day-card">
+        <header class="day-head">
+          <span class="day-num">Day {{ d.get('day', loop.index) }}</span>
+          <h3>{{ d.get('title', '') }}</h3>
+        </header>
+        <div class="day-parts">
+          <div class="day-part"><h4>☀️ Morning</h4><p>{{ d.get('morning', '') }}</p></div>
+          <div class="day-part"><h4>🌤️ Afternoon</h4><p>{{ d.get('afternoon', '') }}</p></div>
+          <div class="day-part"><h4>🌙 Evening</h4><p>{{ d.get('evening', '') }}</p></div>
+        </div>
+      </article>
+      {% endfor %}
+    </section>
+
+    {% set hotels = tool_results.get('hotel', {}) %}
+    {% if hotels.get('status') == 'success' %}
+    <section class="card result-card">
+      <span class="badge badge-mock">🧪 Demo data</span>
+      <h2>🏨 Hotel Suggestions</h2>
+      <p class="muted">{{ hotels.get('note', '') }}</p>
+      <div class="hotel-grid">
+        {% for h in hotels.get('hotels', []) %}
+        <div class="hotel-card">
+          <h3>{{ h.get('name', '') }}</h3>
+          <div class="hotel-meta">⭐ {{ h.get('rating', '—') }} · 📍 {{ h.get('location', '') }}</div>
+          <div class="hotel-price">₹{{ "{:,.0f}".format(h.get('price_per_night', 0)) }}<span>/night</span></div>
+          <div class="hotel-amen">
+            {% for a in h.get('amenities', []) %}<span>{{ a }}</span>{% endfor %}
+          </div>
+        </div>
+        {% endfor %}
+      </div>
+    </section>
+    {% endif %}
+
+    {% set flights = tool_results.get('flight', {}) %}
+    {% if flights.get('status') == 'success' %}
+    <section class="card result-card">
+      <span class="badge badge-mock">🧪 Demo data</span>
+      <h2>✈️ Flight Options ({{ flights.get('origin', '') }} → {{ flights.get('destination', '') }})</h2>
+      <p class="muted">{{ flights.get('note', '') }}</p>
+      <div class="flight-grid">
+        {% for f in flights.get('flights', []) %}
+        <div class="flight-card">
+          <h3>{{ f.get('airline', '') }}</h3>
+          <div class="flight-price">₹{{ "{:,.0f}".format(f.get('price_per_person', 0)) }}<span>/person</span></div>
+          <div class="muted">Group total: ₹{{ "{:,.0f}".format(f.get('total_for_group', 0)) }}
+               · {{ flights.get('travel_class', '') }}</div>
+        </div>
+        {% endfor %}
+      </div>
+    </section>
+    {% endif %}
+
+    {% if itinerary.get('food_recommendations') %}
+    <section class="card result-card">
+      <span class="badge badge-ai">✨ AI generated</span>
+      <h2>🍜 Food Recommendations</h2>
+      <ul class="plain-list">
+        {% for item in itinerary.get('food_recommendations', []) %}<li>{{ item }}</li>{% endfor %}
+      </ul>
+    </section>
+    {% endif %}
+
+    {% if itinerary.get('travel_tips') %}
+    <section class="card result-card">
+      <span class="badge badge-ai">✨ AI generated</span>
+      <h2>💡 Travel Tips</h2>
+      <ul class="plain-list">
+        {% for item in itinerary.get('travel_tips', []) %}<li>{{ item }}</li>{% endfor %}
+      </ul>
+    </section>
+    {% endif %}
+
+    {% endif %}
+
+    <div class="result-actions">
+      <a class="btn btn-ghost" href="/">← Plan another trip</a>
+      <button class="btn btn-primary" type="button" onclick="window.print()">🖨️ Print / Save as PDF</button>
+    </div>
+  </main>
+
+  <footer class="app-footer">
+    AI Travel Agent · Weather by Open-Meteo · Exchange rates by open.er-api.com · Hotel & flight data are demo data
+  </footer>
+
+</body>
+</html>

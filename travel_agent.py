@@ -1,83 +1,105 @@
-import json
+"""Command-line interface for the AI Travel Agent.
 
-from config import client, MODEL_NAME
-from prompts import extraction_prompt, create_travel_prompt
-from memory import memory
-from conversation import ask_missing_information
-from tools.weather import get_weather
-from tools.tool_router import select_tools
+Run with:  python main.py   (or:  python travel_agent.py)
+"""
 
-
-
-def run_travel_agent():
-
-    print("=" * 40)
-    print("      AI TRAVEL AGENT")
-    print("=" * 40)
-
-    print("\nAI : Welcome to AI Travel Agent!\n")
-
-    user_message = input("Describe your trip: ")
-
-    prompt = extraction_prompt(user_message)
-
-    response = client.models.***REMOVED***(
-        model=MODEL_NAME,
-        contents=prompt
-    )
-
-    # Gemini sometimes returns ```json ... ```
-    json_text = response.text.strip()
-
-    if json_text.startswith("```json"):
-        json_text = json_text.replace("```json", "", 1)
-
-    if json_text.startswith("```"):
-        json_text = json_text.replace("```", "", 1)
-
-    if json_text.endswith("```"):
-        json_text = json_text[:-3]
-
-    json_text = json_text.strip()
-
-    travel_data = json.loads(json_text)
-
-    for key, value in travel_data.items():
-        if value is not None:
-            memory[key] = value
-
-    ask_missing_information()
-
-    weather = get_weather(memory["destination"])
-    
-    final_prompt = create_travel_prompt(memory,weather)
-    
-    
-
-    final_response = client.models.***REMOVED***(
-        model=MODEL_NAME,
-        contents=final_prompt
-    )
-
-    print("\n" + "=" * 50)
-    print("      YOUR AI TRAVEL PLAN")
-    print("=" * 50)
-
-    print(final_response.text)
-    
+from agent_executor import plan_trip, process_message
+from conversation import ask_missing_information, get_missing_fields
+from memory import new_memory
 
 
+def _format_memory(memory: dict) -> str:
+    lines = [
+        f"  {field.capitalize():<12}: {value}"
+        for field, value in memory.items()
+        if value not in (None, "")
+    ]
+    return "\n".join(lines)
 
-from tools.tool_router import select_tools
 
-while True:
+def _print_itinerary(itinerary: dict) -> None:
+    if itinerary.get("raw"):
+        if itinerary.get("raw_text"):
+            print(itinerary["raw_text"])
+        return
 
-    message = input("You : ")
+    print("\n--- Trip Summary ---")
+    print(itinerary.get("trip_summary", ""))
 
-    if message.lower() == "exit":
-        break
+    print("\n--- Day-by-Day Plan ---")
+    for day in itinerary.get("days", []):
+        print(f"\nDay {day.get('day')}: {day.get('title', '')}")
+        print(f"  Morning  : {day.get('morning', '')}")
+        print(f"  Afternoon: {day.get('afternoon', '')}")
+        print(f"  Evening  : {day.get('evening', '')}")
 
-    tools = select_tools(message)
+    budget = itinerary.get("budget_breakdown", {})
+    if budget:
+        print("\n--- Estimated Budget (estimate) ---")
+        for category, amount in budget.items():
+            print(f"  {category.capitalize():<15}: Rs {amount}")
 
-    print("\nSelected Tools")
-    print(tools)
+    food = itinerary.get("food_recommendations", [])
+    if food:
+        print("\n--- Food Recommendations ---")
+        for item in food:
+            print(f"  - {item}")
+
+    tips = itinerary.get("travel_tips", [])
+    if tips:
+        print("\n--- Travel Tips ---")
+        for item in tips:
+            print(f"  - {item}")
+
+
+def run_travel_agent() -> None:
+    print("=" * 46)
+    print("          AI TRAVEL AGENT")
+    print("       Plan smarter. Travel better.")
+    print("=" * 46)
+    print("AI: Hi! Tell me about your trip. Type 'exit' to quit.")
+
+    memory = new_memory()
+
+    while True:
+        try:
+            user_message = input("\nYou: ").strip()
+        except (EOFError, KeyboardInterrupt):
+            print("\nAI: Goodbye! Happy travels! ✈️")
+            break
+
+        if not user_message:
+            continue
+        if user_message.lower() in {"exit", "quit", "bye"}:
+            print("AI: Goodbye! Happy travels! ✈️")
+            break
+
+        result = process_message(memory, user_message)
+
+        if result["status"] == "need_info":
+            print(f"\nAI: {result['reply']}")
+            # In the CLI we fill remaining gaps interactively, asking only
+            # for the fields that are still missing.
+            ask_missing_information(memory)
+            if get_missing_fields(memory):
+                continue
+            result = plan_trip(memory, user_message)
+
+        if result["status"] == "error":
+            print(f"\nAI: {result['reply']}")
+            continue
+
+        print("\nAI:", result["reply"])
+        print("\n" + "=" * 46)
+        print("YOUR TRIP DETAILS")
+        print("=" * 46)
+        print(_format_memory(memory))
+        print("\n" + "=" * 46)
+        print("YOUR AI TRAVEL PLAN")
+        print("=" * 46)
+        _print_itinerary(result["itinerary"])
+        print("\nAI: Want to plan another trip? Just describe it, or type 'exit'.")
+
+
+if __name__ == "__main__":
+    run_travel_agent()
