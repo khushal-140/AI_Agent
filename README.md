@@ -47,7 +47,7 @@ travel tips.
 ## Technologies
 
 | Layer      | Technology                                    |
-| ---------- | ***REMOVED***--------------------- |
+| ---------- | --------------------------------------------- |
 | Language   | Python 3.x                                     |
 | LLM        | Google Gemini (`google-genai` SDK)             |
 | Web        | Flask + HTML5 + CSS3 + JavaScript              |
@@ -95,7 +95,7 @@ AI_Agent/
 ├── tool_registry.py     # Metadata registry for all tools
 ├── agent_executor.py    # Generic executor + agent loop + final pipeline
 ├── requirements.txt
-├── .env                 # ***REMOVED*** (never committed)
+├── .env                 # GEMINI_API_KEY (never committed)
 ├── tools/
 │   ├── budget.py        # Budget split + category breakdown (calculated)
 │   ├── weather.py       # Live weather via Open-Meteo
@@ -128,12 +128,12 @@ pip install -r requirements.txt
 Create a `.env` file in the project root:
 
 ```
-***REMOVED***=your_gemini_api_key_here
+GEMINI_API_KEY=your_gemini_api_key_here
 ```
 
 - Get a free key at https://aistudio.google.com/apikey
 - `GEMINI_MODEL` (optional) overrides the model name (default:
-  `gemini-3.***REMOVED***`).
+  `gemini-3.5-flash-lite`).
 - **Never commit `.env`** — it is already listed in `.gitignore`.
 
 ## How to run
@@ -189,7 +189,7 @@ takes each parameter's value from conversation memory (or a declared
 new tool = write the function + register it. Nothing else changes.
 
 | Tool     | Data source                          | Label        |
-| -------- | ***REMOVED***------------ | ------------ |
+| -------- | ------------------------------------ | ------------ |
 | weather  | Open-Meteo (geocoding + forecast)    | live         |
 | budget   | Pure calculation                     | calculated   |
 | hotel    | Mock provider (deterministic)        | demo         |

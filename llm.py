@@ -13,7 +13,7 @@ from google.genai import types
 
 def ask_gemini(prompt: str) -> str:
     """Send a prompt to Gemini and return the raw text response."""
-    response = client.models.***REMOVED***(model=MODEL_NAME, contents=prompt)
+    response = client.models.generate_content(model=MODEL_NAME, contents=prompt)
     if not response.text:
         raise ValueError("Gemini returned an empty response.")
     return response.text
@@ -21,7 +21,7 @@ def ask_gemini(prompt: str) -> str:
 
 def ask_gemini_json(prompt: str):
     """Send a prompt that must answer with JSON and return the parsed value."""
-    response = client.models.***REMOVED***(
+    response = client.models.generate_content(
         model=MODEL_NAME,
         contents=prompt,
         config=types.GenerateContentConfig(response_mime_type="application/json"),
